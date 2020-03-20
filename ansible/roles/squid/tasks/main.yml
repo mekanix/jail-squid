@@ -1,0 +1,33 @@
+---
+- name: install squid packages
+  with_items: "{{ squid_packages }}"
+  package:
+    name: "{{ item.name }}"
+  notify:
+    - restart squid
+
+- name: enable squid
+  template:
+    src: squid.j2
+    dest: /etc/rc.conf.d/squid
+  notify:
+    - restart squid
+
+- name: configure squid
+  template:
+    src: squid.conf.j2
+    dest: /usr/local/etc/squid/squid.conf
+  notify:
+    - restart squid
+
+- name: create swap file
+  command: squid -z
+  args:
+    creates: /var/squid/cache/swap.state
+  notify:
+    - restart squid
+
+- name: start squid
+  service:
+    name: squid
+    state: started
